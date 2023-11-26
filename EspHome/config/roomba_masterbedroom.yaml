@@ -1,0 +1,73 @@
+substitutions:
+  devicename: roomba_masterbedroom
+  friendly_name: Roomba Master Bedroom
+  # state topic, command topic, BRC pin, polling interval
+  # looks like the brc_pin shoule be pin 4 (CHIP_EN/CH_PD for ESP01)
+  init: 'RoombaComponent::instance("roomba_masterbedroom/state", "roomba_masterbedroom/command", 4, 10000);'
+  
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: esp01_1m
+  includes:
+    - includes/ESPHomeRoombaComponent.h
+    - includes/Roomba.cpp
+    - includes/Roomba.h
+#  libraries:
+#    - Roomba=https://github.com/Apocrathia/Roomba
+
+<<: !include includes/common.yaml
+<<: !include includes/haapi.yaml
+<<: !include includes/mqtt.yaml
+
+custom_component:
+  - lambda: |-
+      auto r = ${init}
+      return {r};
+
+binary_sensor:
+  - <<: !include includes/status.yaml
+  
+  - platform: status
+    name: "${devicename} Status"
+
+  - platform: custom
+    lambda: |-
+       auto r = ${init}
+       return {r->chargingBinarySensor, r->dockedBinarySensor, r->cleaningBinarySensor};
+    binary_sensors:
+      - name: "${devicename} charging"
+      - name: "${devicename} docked"
+      - name: "${devicename} cleaning"
+  
+sensor:
+#  - <<: !include includes/wifi_signal.yaml
+  - platform: wifi_signal
+    name: ${friendly_name} WiFi Signal
+    update_interval: 120s
+  - <<: !include includes/uptime.yaml
+  
+  - platform: custom
+    lambda: |-
+      auto r = ${init}
+      return {r->distanceSensor, r->voltageSensor, r->currentSensor, r->chargeSensor, r->capacitySensor};
+    sensors:
+      - name: "${devicename} distance"
+        unit_of_measurement: "mm"
+        accuracy_decimals: 0
+      - name: "${devicename} voltage"
+        unit_of_measurement: "mV"
+        accuracy_decimals: 0
+      - name: "${devicename} current"
+        unit_of_measurement: "mA"
+        accuracy_decimals: 0
+      - name: "${devicename} charge"
+        unit_of_measurement: "mAh"
+        accuracy_decimals: 0
+      - name: "${devicename} capacity"
+        unit_of_measurement: "mAh"
+        accuracy_decimals: 0
+  
+switch:
+  - <<: !include includes/shutdown.yaml
+  - <<: !include includes/restart.yaml

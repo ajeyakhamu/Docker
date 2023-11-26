@@ -1,0 +1,168 @@
+substitutions:
+  devicename: christmastree1
+  friendly_name: Christmas Tree 1 Light
+  
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: esp8285
+  on_boot:
+    then:
+      - script.execute: turn_rainbow_on
+
+<<: !include includes/common.yaml
+<<: !include includes/haapi.yaml
+
+globals:
+  - id: my_global_int
+    type: int
+    restore_value: yes
+    initial_value: '0'
+
+script:
+  - id: turn_rainbow_on
+    then:
+      - light.turn_on:
+          id: thislight
+          effect: Rainbow
+          brightness: 60%
+     
+binary_sensor:
+  - <<: !include includes/status.yaml
+  - platform: gpio
+    pin:
+      number: 1
+      inverted: True
+    #name: ${friendly_name} Switch1
+    id: switch1
+    internal: True
+    on_release:
+      then:
+        - if:
+            condition:
+              lambda: 'return id(my_global_int) == 7;'
+            then:
+              - logger.log: "Gobal int is 7"
+              - light.turn_on:
+                  id: thislight
+                  effect: Strobe
+                  brightness: 60%
+              - globals.set:
+                  id: my_global_int
+                  value: '0'
+        - if:
+            condition:
+              lambda: 'return id(my_global_int) == 6;'
+            then:
+              - logger.log: "Gobal int is 6"
+              - light.turn_on:
+                  id: thislight
+                  effect: Fireworks
+                  brightness: 60%
+              - globals.set:
+                  id: my_global_int
+                  value: '7'
+        - if:
+            condition:
+              lambda: 'return id(my_global_int) == 5;'
+            then:
+              - logger.log: "Gobal int is 5"
+              - light.turn_on:
+                  id: thislight
+                  effect: Twinkle
+                  brightness: 60%
+              - globals.set:
+                  id: my_global_int
+                  value: '6'          
+        - if:
+            condition:
+              lambda: 'return id(my_global_int) == 4;'
+            then:
+              - logger.log: "Gobal int is 4"
+              - light.turn_on:
+                  id: thislight
+                  effect: Scan
+                  brightness: 60%
+              - globals.set:
+                  id: my_global_int
+                  value: '5'
+        - if:
+            condition:
+              lambda: 'return id(my_global_int) == 3;'
+            then:
+              - logger.log: "Gobal int is 3"
+              - light.turn_on:
+                  id: thislight
+                  effect: Color Wipe
+                  brightness: 60%
+              - globals.set:
+                  id: my_global_int
+                  value: '4'
+        - if:
+            condition:
+              lambda: 'return id(my_global_int) == 2;'
+            then:
+              - logger.log: "Gobal int is 2"
+              - light.turn_on:
+                  id: thislight
+                  effect: Flicker
+                  brightness: 60%
+              - globals.set:
+                  id: my_global_int
+                  value: '3'
+        - if:
+            condition:
+              lambda: 'return id(my_global_int) == 1;'
+            then:
+              - logger.log: "Gobal int is 1"
+              - light.turn_on:
+                  id: thislight
+                  effect: Random
+                  brightness: 60%
+              - globals.set:
+                  id: my_global_int
+                  value: '2'
+        - if:
+            condition:
+              lambda: 'return id(my_global_int) == 0;'
+            then:
+              - logger.log: "Gobal int is 0"
+              - light.turn_on:
+                  id: thislight
+                  effect: Rainbow
+                  brightness: 60%
+              - globals.set:
+                  id: my_global_int
+                  value: '1'
+
+sensor:
+  - <<: !include includes/wifi_signal.yaml
+  - <<: !include includes/uptime.yaml
+
+text_sensor:
+  - <<: !include includes/wifi_info.yaml
+    
+switch:
+  - <<: !include includes/shutdown.yaml
+  - <<: !include includes/restart.yaml
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2811
+    pin: GPIO03
+    num_leds: 100
+    rgb_order: BRG
+    name: ${friendly_name} WS2811 Light
+    id: thislight
+    on_turn_on:
+      - script.execute: turn_rainbow_on
+    effects:
+      - addressable_rainbow:
+      - addressable_flicker:
+      - addressable_color_wipe:
+      - addressable_scan:
+      - addressable_twinkle:
+      - addressable_random_twinkle:
+      - addressable_fireworks:
+      - random:
+      - strobe:

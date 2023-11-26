@@ -1,0 +1,372 @@
+substitutions:
+  devicename: displayplate1
+  friendly_name: Display Plate1
+  
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: nodemcuv2
+
+<<: !include includes/common.yaml
+<<: !include includes/haapi.yaml
+
+#sun:
+#  latitude: !secret ha_latitude
+#  longitude: !secret ha_longitude
+
+uart:
+  rx_pin: D2
+  tx_pin: D1
+  baud_rate: 9600
+  
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: America/New_York
+    on_time:
+      - minutes: /1
+        then:
+          - lambda: |-
+              auto time_text = id(sntp_time).now().strftime("%x, %I:%M %p");
+              id(nextiondisplay).set_component_text("Thermostat.tTime", time_text.c_str());
+
+globals:
+  - id: _globalIsFirstRun
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+
+text_sensor:
+  - <<: !include includes/wifi_info.yaml
+  - platform: homeassistant
+    name: Thermostat Mode
+    entity_id: climate.trane_thermostat_mode
+    id: hassclimatemode
+    on_value:
+      then:
+        - lambda: |-
+            id(nextiondisplay).send_command_printf("Thermostat.tModeHeat.pco=61373");
+            id(nextiondisplay).send_command_printf("Thermostat.tModeCool.pco=61373");
+            id(nextiondisplay).send_command_printf("Thermostat.tModeOff.pco=61373");
+            
+            if (strcmp(x.c_str(), "heat") == 0) {
+              id(nextiondisplay).send_command_printf("Thermostat.tModeHeat.pco=49152");
+            } else if (strcmp(x.c_str(), "cool") == 0) {
+              id(nextiondisplay).send_command_printf("Thermostat.tModeCool.pco=32023");
+            } else if (strcmp(x.c_str(), "off") == 0) {
+              id(nextiondisplay).send_command_printf("Thermostat.tModeOff.pco=32023");
+            }
+  - platform: homeassistant
+    name: Thermostat Fan Mode
+    entity_id: sensor.thermostat_fan_mode
+    id: hassfanmode
+    on_value:
+      then:
+        - lambda: |-
+            id(nextiondisplay).send_command_printf("Thermostat.fModeCirculate.pco=61373");
+            id(nextiondisplay).send_command_printf("Thermostat.fModeAutolow.pco=61373");
+            id(nextiondisplay).send_command_printf("Thermostat.fModeOnlow.pco=WHITE");
+            
+            if (strcmp(x.c_str(), "Circulate") == 0) {
+              id(nextiondisplay).send_command_printf("Thermostat.fModeCirculate.pco=32023");
+            } else if (strcmp(x.c_str(), "Auto Low") == 0) {
+              id(nextiondisplay).send_command_printf("Thermostat.fModeAutolow.pco=32023");
+            } else if (strcmp(x.c_str(), "On Low") == 0) {
+              id(nextiondisplay).send_command_printf("Thermostat.fModeOnlow.pco=32023");
+            }
+  - platform: homeassistant
+    name: Home Alarm
+    entity_id: alarm_control_panel.home_alarm
+    id: hasshomealarm
+    on_value:
+      then:
+        - lambda: |-
+            id(nextiondisplay).set_component_text_printf("Security.tSecStatus", "%s", "o");
+            
+            if (strcmp(x.c_str(), "disarmed") == 0) {
+              id(nextiondisplay).set_component_text_printf("Security.tSecStatus", "%s", "o");
+            } else if (strcmp(x.c_str(), "armed_away") == 0) {
+              id(nextiondisplay).set_component_text_printf("Security.tSecStatus", "%s", "n");
+            } else if (strcmp(x.c_str(), "armed_home") == 0) {
+              id(nextiondisplay).set_component_text_printf("Security.tSecStatus", "%s", "p");
+            }
+  
+sensor:
+#  - <<: !include includes/wifi_signal.yaml
+  - platform: wifi_signal
+    name: ${friendly_name} WiFi Signal
+    update_interval: 60s
+    on_value:
+        then:
+        - lambda: |-
+            id(nextiondisplay).set_component_text_printf("Settings.t1", "%.1f dB", x);
+  - <<: !include includes/uptime.yaml
+  - platform: homeassistant
+    name: Home Temp
+    entity_id: sensor.home_temp
+    id: hasshometemp
+    on_value:
+      then:
+        - lambda: |-
+            id(nextiondisplay).set_component_text_printf("Thermostat.hTemp", "%.1f", x);
+  - platform: homeassistant
+    name: Thermostat Temp
+    entity_id: sensor.thermostat_temp
+    id: hassclimatetemp
+    on_value:
+      then:
+        - lambda: |-
+            id(nextiondisplay).set_component_text_printf("Thermostat.tTemp", "%.1f", x);
+
+binary_sensor:
+  - <<: !include includes/status.yaml
+  - platform: nextion
+    page_id: 0
+    component_id: 11
+    id: btn0_11
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Lights");
+            id(btn0_11).publish_state(true);
+  - platform: nextion
+    page_id: 0
+    component_id: 12
+    id: btn0_12
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Security");
+            id(btn0_12).publish_state(true);
+  - platform: nextion
+    page_id: 0
+    component_id: 13
+    id: btn0_13
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Settings");
+            id(btn0_13).publish_state(true);
+  - platform: nextion
+#    //btn heat
+    page_id: 0
+    component_id: 3
+    id: btn0_3
+    on_release:
+      then:
+        - homeassistant.service:
+            service: climate.set_hvac_mode
+            data:
+              entity_id: 'climate.trane_thermostat_mode'
+              hvac_mode: 'heat'
+        - lambda: |-
+            id(btn0_3).publish_state(true);
+  - platform: nextion
+#    // btn off
+    page_id: 0
+    component_id: 6
+    id: btn0_6
+    on_release:
+      then:
+        - homeassistant.service:
+            service: climate.set_hvac_mode
+            data:
+              entity_id: 'climate.trane_thermostat_mode'
+              hvac_mode: 'off'
+        - lambda: |-
+            id(btn0_6).publish_state(true);
+  - platform: nextion
+#    //btn cool
+    page_id: 0
+    component_id: 7
+    id: btn0_7
+    on_release:
+      then:
+        - homeassistant.service:
+            service: climate.set_hvac_mode
+            data:
+              entity_id: 'climate.trane_thermostat_mode'
+              hvac_mode: 'cool'
+        - lambda: |-
+            id(btn0_7).publish_state(true);
+  - platform: nextion
+#    //btn circulate
+    page_id: 0
+    component_id: 4
+    id: btn0_4
+    on_release:
+      then:
+        - homeassistant.service:
+            service: climate.set_fan_mode
+            data:
+              entity_id: 'climate.trane_thermostat_mode'
+              fan_mode: 'Circulate'
+        - lambda: |-
+            id(btn0_4).publish_state(true);
+  - platform: nextion
+#    //btn auto low
+    page_id: 0
+    component_id: 8
+    id: btn0_8
+    on_release:
+      then:
+        - homeassistant.service:
+            service: climate.set_fan_mode
+            data:
+              entity_id: 'climate.trane_thermostat_mode'
+              fan_mode: 'Auto Low'
+        - lambda: |-
+            id(btn0_8).publish_state(true);
+  - platform: nextion
+#    //btn on low
+    page_id: 0
+    component_id: 9
+    id: btn0_9
+    on_release:
+      then:
+        - homeassistant.service:
+            service: climate.set_fan_mode
+            data:
+              entity_id: 'climate.trane_thermostat_mode'
+              fan_mode: 'On Low'
+        - lambda: |-
+            id(btn0_9).publish_state(true);
+  - platform: nextion
+#    //btn plus
+    page_id: 0
+    component_id: 14
+    id: btn0_14
+    on_release:
+      then:
+        - homeassistant.service:
+            service: climate.set_temperature
+            data_template:
+              entity_id: 'climate.trane_thermostat_mode'
+              temperature: '{{ newTemp }}'
+            variables:
+              newTemp: |-
+                return id(hassclimatetemp).state++;
+        - lambda: |-
+            id(btn0_14).publish_state(true);
+  - platform: nextion
+#    //btn minus
+    page_id: 0
+    component_id: 15
+    id: btn0_15
+    on_release:
+      then:
+        - homeassistant.service:
+            service: climate.set_temperature
+            data_template:
+              entity_id: 'climate.trane_thermostat_mode'
+              temperature: '{{ newTemp }}'
+            variables:
+              newTemp: |-
+                return id(hassclimatetemp).state--;
+        - lambda: |-
+            id(btn0_15).publish_state(true);
+  - platform: nextion
+    page_id: 1
+    component_id: 1
+    id: btn1_1
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Thermostat");
+            id(btn1_1).publish_state(true);
+  - platform: nextion
+    page_id: 1
+    component_id: 3
+    id: btn1_3
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Security");
+            id(btn1_3).publish_state(true);
+  - platform: nextion
+    page_id: 1
+    component_id: 4
+    id: btn1_4
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Settings");
+            id(btn1_4).publish_state(true);
+
+  - platform: nextion
+    page_id: 2
+    component_id: 1
+    id: btn2_1
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Thermostat");
+            id(btn2_1).publish_state(true);
+  - platform: nextion
+    page_id: 2
+    component_id: 2
+    id: btn2_2
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Lights");
+            id(btn2_2).publish_state(true);
+  - platform: nextion
+    page_id: 2
+    component_id: 4
+    id: btn2_4
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Settings");
+            id(btn1_4).publish_state(true);
+
+  - platform: nextion
+    page_id: 3
+    component_id: 1
+    id: btn3_1
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Thermostat");
+            id(btn3_1).publish_state(true);
+  - platform: nextion
+    page_id: 3
+    component_id: 2
+    id: btn3_2
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Lights");
+            id(btn3_2).publish_state(true);
+  - platform: nextion
+    page_id: 3
+    component_id: 3
+    id: btn3_3
+    on_release:
+      then:
+        - lambda: |-
+            id(nextiondisplay).goto_page("Security");
+            id(btn3_3).publish_state(true);
+
+switch:
+  - <<: !include includes/shutdown.yaml
+  - <<: !include includes/restart.yaml
+
+display:
+  - platform: nextion
+    id: nextiondisplay
+    lambda: |-
+      if (id(_globalIsFirstRun)) {
+        it.set_wait_for_ack(false);
+        
+        it.goto_page("Thermostat");
+        
+        it.send_command_no_ack("dim=75");
+        it.send_command_no_ack("dims=75");
+
+        it.send_command_no_ack("thup=1");
+        it.send_command_no_ack("thsp=65535");
+        
+        id(_globalIsFirstRun) = false;
+      }

@@ -1,0 +1,13 @@
+version: '3'
+services:
+  hass:
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    container_name: HASS
+    privileged: true
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./hassconfig:/config
+      - /etc/localtime:/etc/localtime:ro
+  
+#docker exec -it hass_test_1 /bin/sh

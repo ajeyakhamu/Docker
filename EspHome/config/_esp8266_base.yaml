@@ -1,0 +1,25 @@
+substitutions:
+  devicename: _esp8266_base
+  friendly_name: Esp8266 Base
+  
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: esp01_1m
+
+<<: !include includes/common.yaml
+<<: !include includes/haapi.yaml
+
+binary_sensor:
+  - <<: !include includes/status.yaml
+  
+sensor:
+  - <<: !include includes/wifi_signal.yaml
+  - <<: !include includes/uptime.yaml
+
+text_sensor:
+  - <<: !include includes/wifi_info.yaml
+  
+switch:
+  - <<: !include includes/shutdown.yaml
+  - <<: !include includes/restart.yaml

@@ -1,0 +1,5 @@
+mqtt:
+  broker: !secret mqtthost
+  username: !secret mqttuser
+  password: !secret mqttpass
+  discovery: true

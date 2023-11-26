@@ -1,0 +1,145 @@
+#Zone          Pin
+#1	            1
+#2	            2
+#3	            5
+#4	            6
+#5	            7
+#6	            9
+#OUT or ALARM	  8
+
+substitutions:
+  devicename: konnectedaddon1
+  friendly_name: Konnected Addon1
+  buzzFreq: 3500Hz
+  buzzLevel: 100%
+  buzzPlay: 85ms
+  buzzWait: 110ms
+  
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: nodemcuv2
+
+<<: !include includes/common.yaml
+<<: !include includes/haapi.yaml
+
+binary_sensor:
+  - <<: !include includes/status.yaml
+  - platform: gpio
+    pin:
+      number: D1
+      mode: INPUT_PULLUP
+    name: ${friendly_name}_zone_1
+    device_class: window
+  - platform: gpio
+    pin:
+      number: D2
+      mode: INPUT_PULLUP
+    name: ${friendly_name}_zone_2
+    device_class: door
+  - platform: gpio
+    pin:
+      number: D5
+      mode: INPUT_PULLUP
+    name: ${friendly_name}_zone_3
+    device_class: window
+
+sensor:
+  - <<: !include includes/wifi_signal.yaml
+  - <<: !include includes/uptime.yaml
+  - platform: dht
+    pin: D9
+    temperature:
+      name: ${friendly_name}_sensor_6_temperature
+      filters:
+      - lambda: return x * (9.0/5.0) + 32.0;
+      unit_of_measurement: °F
+    humidity:
+      name: ${friendly_name}_sensor_6_humidity
+    update_interval: 60s
+    model: AM2302
+
+text_sensor:
+  - <<: !include includes/wifi_info.yaml
+  
+output:
+  - platform: esp8266_pwm
+    pin: D6
+    id: 'buzzerlivingroom'
+  - platform: esp8266_pwm
+    pin: D7
+    id: 'buzzerbasement'
+
+switch:
+  - <<: !include includes/shutdown.yaml
+  - <<: !include includes/restart.yaml
+  - platform: template
+    name: ${friendly_name}_livingroom_beep_1
+    id: livingroom_beep_1
+    lambda: |-
+      return false;
+    turn_on_action:
+      - output.turn_off: buzzerlivingroom
+      - output.esp8266_pwm.set_frequency:
+          id: buzzerlivingroom
+          frequency: ${buzzFreq}
+      - output.set_level:
+          id: buzzerlivingroom
+          level: ${buzzLevel}
+      - delay: ${buzzPlay}
+      - output.turn_off: buzzerlivingroom
+  - platform: template
+    name: ${friendly_name}_livingroom_beep_2
+    lambda: |-
+      return false;
+    turn_on_action:
+      - switch.turn_on: livingroom_beep_1
+      - delay: ${buzzWait}
+      - switch.turn_on: livingroom_beep_1
+  - platform: template
+    name: ${friendly_name}_livingroom_beep_4
+    lambda: |-
+      return false;
+    turn_on_action:
+      - switch.turn_on: livingroom_beep_1
+      - delay: ${buzzWait}
+      - switch.turn_on: livingroom_beep_1
+      - delay: ${buzzWait}
+      - switch.turn_on: livingroom_beep_1
+      - delay: ${buzzWait}
+      - switch.turn_on: livingroom_beep_1
+  - platform: template
+    name: ${friendly_name}_basement_beep_1
+    id: basement_beep_1
+    lambda: |-
+      return false;
+    turn_on_action:
+      - output.turn_off: buzzerbasement
+      - output.esp8266_pwm.set_frequency:
+          id: buzzerbasement
+          frequency: ${buzzFreq}
+      - output.set_level:
+          id: buzzerbasement
+          level: ${buzzLevel}
+      - delay: ${buzzPlay}
+      - output.turn_off: buzzerbasement
+  - platform: template
+    name: ${friendly_name}_basement_beep_2
+    lambda: |-
+      return false;
+    turn_on_action:
+      - switch.turn_on: basement_beep_1
+      - delay: ${buzzWait}
+      - switch.turn_on: basement_beep_1
+  - platform: template
+    name: ${friendly_name}_basement_beep_4
+    lambda: |-
+      return false;
+    turn_on_action:
+      - switch.turn_on: basement_beep_1
+      - delay: ${buzzWait}
+      - switch.turn_on: basement_beep_1
+      - delay: ${buzzWait}
+      - switch.turn_on: basement_beep_1
+      - delay: ${buzzWait}
+      - switch.turn_on: basement_beep_1

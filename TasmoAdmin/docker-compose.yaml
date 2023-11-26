@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+
+  tasmoadmin:
+    image: raymondmm/tasmoadmin
+    container_name: TasmoAdmin
+    restart: unless-stopped
+    ports:
+      - 9002:80
+#      - 9003:443
+    volumes:
+      - ./data:/data

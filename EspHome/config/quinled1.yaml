@@ -1,0 +1,143 @@
+#https://quinled.info/2019/05/09/quinled-dig-uno-pinoutwiring-guide/
+
+#D5 (IO14) DS18B20 Onboard Tempsensor
+
+# Left
+#D1 (IO5) Q1 --> dht
+#D2 (IO4) Q2 --> Motion
+
+# Right
+#D6 (IO12) Q3 --> Relay
+#D7 (IO23) Q4 --> Contact Sensor
+
+substitutions:
+  devicename: quinled1
+  friendly_name: QuinLed1
+  
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: d1_mini
+
+<<: !include includes/common.yaml
+<<: !include includes/haapi.yaml
+
+status_led:
+  pin:
+    number: D4
+    inverted: True
+
+#dallas:
+#  - pin: D5
+  
+sensor:
+  - <<: !include includes/wifi_signal.yaml
+  - <<: !include includes/uptime.yaml
+#  - platform: dallas
+#    index: 0
+#    name: "OnboardDallas"
+#    filters:
+#      - lambda: return x * (9.0/5.0) + 32.0;
+#    unit_of_measurement: °F
+  - platform: dht
+    pin: D1
+    temperature:
+      name: ${friendly_name} Temperature
+      filters:
+      - lambda: return x * (9.0/5.0) + 32.0;
+      unit_of_measurement: °F
+    humidity:
+      name: ${friendly_name} Humidity
+    update_interval: 60s
+    model: AM2302
+
+text_sensor:
+  - <<: !include includes/wifi_info.yaml
+
+binary_sensor:
+  - <<: !include includes/status.yaml
+  - platform: gpio
+    pin: D2
+    name: ${friendly_name} Motion
+    device_class: motion
+    filters:
+      - delayed_off: 15s
+  - platform: gpio
+    pin:
+      number: D7
+      mode: INPUT_PULLUP
+      inverted: True
+    name: ${friendly_name} Contact Sensor1
+    id: garage_contanctsensor1
+    device_class: garage_door
+    filters:
+      - delayed_on: 100ms
+      - delayed_off: 100ms
+      - delayed_on_off: 100ms
+    internal: True
+ 
+switch:
+  - <<: !include includes/shutdown.yaml
+  - <<: !include includes/restart.yaml
+  - platform: gpio
+    pin: 
+      number: D6
+      inverted: True
+    name: ${friendly_name} Switch1
+    id: garage_switch1
+    internal: True
+    restore_mode: ALWAYS_OFF
+    
+cover:
+  - platform: template
+    name: ${friendly_name} Template Cover
+    lambda: |-
+      if (id(garage_contanctsensor1).state) {
+        return COVER_CLOSED;
+      } else {
+        return COVER_OPEN;
+      }
+    open_action:
+      - switch.turn_on: garage_switch1
+      - delay: 0.5s
+      - switch.turn_off: garage_switch1
+    close_action:
+      - switch.turn_on: garage_switch1
+      - delay: 0.5s
+      - switch.turn_off: garage_switch1
+    stop_action:
+      - switch.turn_on: garage_switch1
+      - delay: 0.5s
+      - switch.turn_off: garage_switch1
+    optimistic: true
+  
+script:
+  - id: turn_rainbow_on
+    then:
+      - light.turn_on:
+          id: thislight
+          effect: Rainbow
+          brightness: 60%
+
+# Dig Uno Pin L1_D
+# Jumper set to GPIO02
+light:
+  - platform: fastled_clockless
+    chipset: WS2811
+    pin: GPIO02
+    num_leds: 200
+    rgb_order: BRG
+    name: ${friendly_name} WS2811 Light
+    id: thislight
+    on_turn_on:
+      - script.execute: turn_rainbow_on
+    effects:
+      - addressable_rainbow:
+      - addressable_flicker:
+      - addressable_color_wipe:
+      - addressable_scan:
+      - addressable_twinkle:
+      - addressable_random_twinkle:
+      - addressable_fireworks:
+      - random:
+      - strobe:

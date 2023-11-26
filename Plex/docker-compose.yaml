@@ -1,0 +1,17 @@
+version: '2'
+services:
+  plex:
+    image: plexinc/pms-docker
+    container_name: Plex
+    restart: unless-stopped
+    environment:
+      PLEX_CLAIM: "claim-xxxxx"
+    volumes:
+      - ./config:/config
+      - ./transcode:/transcode
+      - /mnt/Media:/data
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: host
+
+# If error create new claim code from :
+# https://www.plex.tv/claim/

@@ -1,0 +1,2 @@
+platform: shutdown
+name: ${friendly_name} Shutdown

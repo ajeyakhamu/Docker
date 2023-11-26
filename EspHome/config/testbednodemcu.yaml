@@ -1,0 +1,135 @@
+#Zone          Pin
+#1	            1
+#2	            2
+#3	            5
+#4	            6
+#5	            7
+#6	            9
+#OUT or ALARM	  8
+
+substitutions:
+  devicename: testbednodemcu
+  friendly_name: Testbed NodeMCU
+  buzzFreq: 3500Hz
+  buzzLevel: 100%
+  buzzPlay: 85ms
+  buzzWait: 110ms
+  
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: nodemcuv2
+
+<<: !include includes/common.yaml
+<<: !include includes/haapi.yaml
+
+status_led:
+  pin: GPIO2
+
+text_sensor:
+  - <<: !include includes/wifi_info.yaml
+
+output:
+  - platform: esp8266_pwm
+    pin: D8
+    id: 'buzzer1'
+
+sensor:
+  - <<: !include includes/wifi_signal.yaml
+  - <<: !include includes/uptime.yaml
+  - platform: dht
+    pin: D5
+    temperature:
+      name: ${friendly_name} Temperature
+      filters:
+      - lambda: return x * (9.0/5.0) + 32.0;
+      unit_of_measurement: °F
+    humidity:
+      name: ${friendly_name} Humidity
+    update_interval: 60s
+    model: AM2302
+    
+switch:
+  - <<: !include includes/shutdown.yaml
+  - <<: !include includes/restart.yaml
+  - platform: gpio
+    pin: 
+      number: D6
+      inverted: True
+    name: ${friendly_name} Switch1
+    id: garage_switch1
+    internal: True
+
+binary_sensor:
+  - <<: !include includes/status.yaml
+  - platform: gpio
+    pin: D7
+    name: ${friendly_name} Motion
+    device_class: motion
+    filters:
+      - delayed_off: 10s
+  - platform: gpio
+    pin:
+      number: D2
+      mode: INPUT_PULLUP
+      inverted: True
+    name: ${friendly_name} Contact Sensor1
+    id: garage_contanctsensor1
+    device_class: garage_door
+    filters:
+      - delayed_on: 100ms
+      - delayed_off: 100ms
+      - delayed_on_off: 100ms
+    internal: True
+    
+cover:
+  - platform: template
+    name: ${friendly_name} Template Cover
+    lambda: |-
+      if (id(garage_contanctsensor1).state) {
+        return COVER_CLOSED;
+      } else {
+        return COVER_OPEN;
+      }
+    open_action:
+      - switch.turn_on: garage_switch1
+      - delay: 0.3s
+      - switch.turn_off: garage_switch1
+    close_action:
+      - switch.turn_on: garage_switch1
+      - delay: 0.3s
+      - switch.turn_off: garage_switch1
+    stop_action:
+      - switch.turn_on: garage_switch1
+      - delay: 0.3s
+      - switch.turn_off: garage_switch1
+    optimistic: true
+
+script:
+  - id: turn_rainbow_on
+    then:
+      - light.turn_on:
+          id: thislight
+          effect: Rainbow
+          brightness: 60%
+  
+light:
+  - platform: fastled_clockless
+    chipset: WS2811
+    pin: D3
+    num_leds: 200
+    rgb_order: BRG
+    name: ${friendly_name} WS2811 Light
+    id: thislight
+    on_turn_on:
+      - script.execute: turn_rainbow_on
+    effects:
+      - addressable_rainbow:
+      - addressable_flicker:
+      - addressable_color_wipe:
+      - addressable_scan:
+      - addressable_twinkle:
+      - addressable_random_twinkle:
+      - addressable_fireworks:
+      - random:
+      - strobe:
