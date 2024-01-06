@@ -1,0 +1,16 @@
+version : '3'
+ 
+services:
+
+seq:
+    image: datalust/seq
+    container_name: seq
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: Y
+    volumes:
+      - ./seqdata:/data
+    ports:
+      - 8080:80
+      - 8443:443
+      - 5341:5341
