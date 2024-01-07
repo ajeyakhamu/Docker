@@ -18,7 +18,17 @@ datasources:
     url: http://tempo:3200
     basicAuth: false
     isDefault: false
-    version: 1
+    version: 2
     editable: false
     apiVersion: 1
     uid: tempo
+  - name: loki
+    type: loki
+    access: proxy
+    orgId: 1
+    url: http://loki:3100
+    basicAuth: false
+    isDefault: false
+    version: 2
+    readOnly: false
+    uid: loki

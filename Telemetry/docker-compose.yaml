@@ -3,6 +3,44 @@
 version : '3'
  
 services:
+
+  tempo:
+    image: grafana/tempo
+    container_name: tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    ports:
+      - 4317:4317
+      - 4318:4318
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+#      - ./tempodata:/tmp/tempo
+  
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    ports:
+      - 3100:3100
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki.yaml:/etc/loki/local-config.yaml
+#      - ./lokidata:/tmp/loki
+
+  collector:
+    image: otel/opentelemetry-collector-contrib
+    container_name: collector
+    command: [ "--config=/etc/collector.yaml" ]
+    ports:
+      #- 1888:1888   # pprof extension
+      #- 13133:13133 # health_check extension
+      - 4319:4319 # 4317:4317  # otlp grpc
+      - 4320:4320 # 4318:4318  # otlp http
+      - 8888:8888   # Prometheus metrics exposed by the collector
+      - 8889:8889   # Prometheus exporter metrics
+    volumes:
+      - ./otel-collector.yaml:/etc/collector.yaml
+    depends_on:
+      - tempo
+      - loki
   
   prometheus:
     image: prom/prometheus
@@ -12,47 +50,25 @@ services:
       - 9090:9090
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-
-  tempo:
-    image: grafana/tempo
-    container_name: tempo
-    command: [ "-config.file=/etc/tempo.yaml" ]
-    volumes:
-      - ./tempo.yaml:/etc/tempo.yaml
-      - ./tempodata:/tmp/tempo
-
-  collector:
-    image: otel/opentelemetry-collector-contrib
-    container_name: collector
-    command: [ "--config=/etc/collector.yaml" ]
-    ports:
-      - 14268:14268  # jaeger ingest
-      - 3200:3200   # tempo
-      - 9095:9095 # tempo grpc
-      - 4317:4317  # otlp grpc
-      - 4318:4318  # otlp http
-      - 9411:9411   # zipkin
-    volumes:
-      - ./otel-collector.yaml:/etc/collector.yaml
     depends_on:
-      - tempo
+      - collector
 
   grafana: 
     image: grafana/grafana
     container_name: grafana
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=P@ssw0rd
-#      - GF_AUTH_ANONYMOUS_ENABLED=true
-#      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-#      - GF_AUTH_DISABLE_LOGIN_FORM=true
+#      - GF_SECURITY_ADMIN_PASSWORD=P@ssw0rd
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
 #      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor traceQLStreaming metricsSummary
     ports:
       - 3000:3000
     volumes:
       - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
     depends_on:
-      - collector
+      - prometheus
       - tempo
-#      - prometheus
+      - loki
 
   
