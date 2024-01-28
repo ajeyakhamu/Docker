@@ -1,22 +1,19 @@
+
 version: '3'
 services:
   web:
     image: nginx
     container_name: web
     ports:
-      - 9000:80
+      - 9001:80
     labels:
       traefik.enable: true
-      traefik.http.services.web.loadbalancer.server.port: 80 # port to redirect to
-      traefik.http.routers.nginx.rule: Host(`db.khamu.lan`) # url for the application
-      #http
-      #traefik.http.routers.nginx.entrypoints: web
-      #https
-      traefik.http.routers.nginx.entrypoints: websecure
-      traefik.http.routers.nginx.tls: true
+      traefik.http.routers.web.rule: Host(`db.khamu.lan`) # url for the application
+      traefik.http.routers.web.entrypoints: web, websecure
+      traefik.http.routers.web.tls: true
     networks:
       - traefik-network
-    
+
 networks:
   traefik-network:
     name: traefik-network
