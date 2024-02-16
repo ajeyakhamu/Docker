@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@khamu.lan
+      PGADMIN_DEFAULT_PASSWORD: changeme
+    labels:
+      traefik.enable: true
+      traefik.http.services.pgadmin.loadbalancer.server.port: 80 # port to redirect to
+      traefik.http.routers.pgadmin.rule: Host(`pgadmin.khamu.lan`) # url for the application
+      traefik.http.routers.pgadmin.entrypoints: websecure
+      traefik.http.routers.pgadmin.tls: true
+    networks:
+      - traefik-network
+
+networks:
+  traefik-network:
+    name: traefik-network
+    external: true

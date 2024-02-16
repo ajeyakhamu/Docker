@@ -1,6 +1,4 @@
-  GNU nano 6.2                                   docker-compose.yml *
-
-version: '3'
+ersion: '3'
 
 services:
   portainer:
@@ -16,7 +14,7 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.portainer.loadbalancer.server.port: 9000 # port to redirect to
-      traefik.http.routers.portainer.rule: Host(`dagster.khamu.lan`) # url for the application
+      traefik.http.routers.portainer.rule: Host(`dockerhost01.khamu.lan`) # url for the application
       traefik.http.routers.portainer.entrypoints: web, websecure
       traefik.http.routers.portainer.tls: true
 
