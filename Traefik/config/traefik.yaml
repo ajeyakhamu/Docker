@@ -33,6 +33,8 @@ entryPoints:
           scheme: https
   websecure:
     address: :443
+  mysql:
+    address: :3306
   # -- (Optional) Add custom Entrypoint
   #custom:
   #  address: :8080
