@@ -1,0 +1,20 @@
+source: DB_SERVER
+target: DB_LOCAL
+
+defaults:
+  object: "{target_schema}.{stream_schema}_{stream_table}"
+  mode: incremental
+  primary_key: [id]
+
+streams:
+  stockdb.alembic_version:
+    object: stockdb.alembic_version
+    primary_key: [version_num]
+  stockdb.tbl_country:
+    object: stockdb.tbl_country
+  stockdb.tbl_stock:
+    object: stockdb.tbl_stock
+  stockdb.tbl_priceinfo:
+    object: stockdb.tbl_priceinfo
+    primary_key: [stockId, Date]
+#sling run --rm -i slingdata/sling run -r ./server_localdb.yml

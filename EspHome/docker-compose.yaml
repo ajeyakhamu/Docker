@@ -1,14 +1,26 @@
-version: '3'
+#version: '3'
 
 services:
   esphome:
     image: esphome/esphome
-    container_name: EspHome
+    container_name: espHome
     environment:
       ESPHOME_DASHBOARD_USE_PING: "true"
-    ports:
-      - 6052:6052
-      - 6123:6123
+#    ports:
+#      - 6052:6052
     volumes:
       - ./config:/config
     restart: unless-stopped
+    labels:
+      traefik.enable: true
+      traefik.http.services.esphome.loadbalancer.server.port: 6052 # port to redirect to
+      traefik.http.routers.esphome.rule: Host(`esphome.khamu.lan`) # url for the application
+      traefik.http.routers.esphome.entrypoints: web, websecure
+      traefik.http.routers.esphome.tls: true
+    networks:
+      - traefik-network
+
+networks:
+  traefik-network:
+    name: traefik-network
+    external: true

@@ -1,0 +1,15 @@
+source: DB_SERVER
+target: LOCAL
+
+defaults:
+  target_options:
+    format: parquet
+
+streams:
+  stockdb.tbl_country:
+    object: ./exports/country.parquet
+  stockdb.tbl_stock:
+    object: ./exports/stock.parquet
+  stockdb.tbl_priceinfo:
+    object: ./exports/priceinfo.parquet
+#sling run --rm -i slingdata/sling run -r ./db_parquet.yml --mode full-refresh

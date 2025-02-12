@@ -4,43 +4,38 @@ services:
     image: mariadb
     container_name: db
     restart: unless-stopped
-    ports:
-      - 3306:3306
+#    ports:
+#      - 3306:3306
     volumes:
       - ./data:/var/lib/mysql:Z
     environment:
       - MARIADB_ROOT_USER=root
       - MARIADB_ROOT_PASSWORD=rootpw
-#      - MARIADB_DATABASE=stockdb
-#      - MARIADB_USER=stockuser
-#      - MARIADB_PASSWORD=stockpassword
-#    labels:
-#      traefik.enable: true
-#      traefik.tcp.services.db.loadbalancer.server.port: 3306 # port to redirect to
-#      traefik.tcp.routers.db.rule: HostSNI(`*`) # url for the application
-#      traefik.tcp.routers.db.entrypoints: mysql
-#    networks:
-#      - traefik-network
-
+    labels:
+      traefik.enable: true
+      traefik.tcp.services.db.loadbalancer.server.port: 3306 # port to redirect to
+      traefik.tcp.routers.db.rule: HostSNI(`*`) # url for the application
+      traefik.tcp.routers.db.entrypoints: mysql
+    networks:
+      - traefik-network
+      
   adminer:
     image: adminer
     container_name: adminer
     restart: unless-stopped
-    ports:
-      - 8080:8080
-#    labels:
-#      traefik.enable: true
-#      traefik.http.services.adminer.loadbalancer.server.port: 8080 # port to redirect to
-#      traefik.http.routers.adminer.rule: Host(`adminer.khamu.lan`) # url for the application
-#      traefik.http.routers.adminer.entrypoints: websecure
-#      traefik.http.routers.adminer.tls: true
-#    networks:
-#      - traefik-network
+#    ports:
+#      - 8080:8080
+    labels:
+      traefik.enable: true
+      traefik.http.services.adminer.loadbalancer.server.port: 8080 # port to redirect to
+      traefik.http.routers.adminer.rule: Host(`adminer.khamu.lan`) # url for the application
+      traefik.http.routers.adminer.entrypoints: websecure
+      traefik.http.routers.adminer.tls: true
+    networks:
+      - traefik-network
 
-#networks:
-#  traefik-network:
-#    name: traefik-network
-#    external: true
+networks:
+  traefik-network:
+    name: traefik-network
+    external: true
 
-
-#SHOW GRANTS FOR 'root'@'%';

@@ -1,4 +1,4 @@
-version: '3'
+#version: '3'
 
 services:
   traefik:
@@ -7,7 +7,6 @@ services:
     ports:
       - 80:80
       - 443:443
-      - 3306:3306
       # -- (Optional) Enable Dashboard, don't do in production
       - 8080:8080
     volumes:

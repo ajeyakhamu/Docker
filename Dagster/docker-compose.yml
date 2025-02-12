@@ -1,0 +1,27 @@
+services:
+
+  dagsterjobs:
+    image: dagster_jobs:latest
+    container_name: dagsterjobs
+    restart: unless-stopped
+    volumes:
+      - ./app:/app
+    # command: dagster-webserver -h 0.0.0.0 -p 3000 # could not get the daemon running
+    command: dagster dev -h 0.0.0.0 -p 3000
+#    ports:
+#      - 3000:3000
+    env_file:
+      - .env
+    labels:
+      traefik.enable: true
+      traefik.http.services.dagsterjobs.loadbalancer.server.port: 3000 # port to redirect to
+      traefik.http.routers.dagsterjobs.rule: Host(`dagster.khamu.lan`) # url for the application
+      traefik.http.routers.dagsterjobs.entrypoints: websecure
+      traefik.http.routers.dagsterjobs.tls: true
+    networks:
+      - traefik-network
+
+networks:
+  traefik-network:
+    name: traefik-network
+    external: true
