@@ -1,16 +1,29 @@
-version: '3'
-
 services:
 
   mqtt:
     image: eclipse-mosquitto
-    container_name: Mqtt
-    ports:
-      - 1883:1883
+    container_name: mqtt
+#    ports:
+#      - 1883:1883
+#      - 9001:9001
     restart: unless-stopped
     volumes:
       - "./mqttconfig:/mosquitto/config:rw"
       - "./mqttdata:/mosquitto/data:rw"
       - "./mqttlog:/mosquitto/log:rw"
+    labels:
+      traefik.enable: true
+      traefik.tcp.services.mqtt.loadbalancer.server.port: 1883 # port to redirect to
+      traefik.tcp.routers.mqtt.rule: HostSNI(`*`) # url for the application
+      traefik.tcp.routers.mqtt.entrypoints: mqtt
+    networks:
+      - traefik-network
 
-#docker exec -it hass_test_1 /bin/sh
+networks:
+  traefik-network:
+    name: traefik-network
+    external: true
+
+
+
+#docker compose exec mqtt /bin/sh

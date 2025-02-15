@@ -1,17 +1,42 @@
-version: '2'
 services:
   plex:
-    image: plexinc/pms-docker
-    container_name: Plex
-    restart: unless-stopped
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
     environment:
-      PLEX_CLAIM: "claim-xxxxx"
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - VERSION=GPUDOC
+      - PLEX_CLAIM=claim-54Nx9nDZeGknHx76BCmb
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     volumes:
       - ./config:/config
-      - ./transcode:/transcode
-      - /mnt/Media:/data
-      - /etc/localtime:/etc/localtime:ro
-    network_mode: host
+      - ./transcoder:/transcoder
+      - /mnt/Media:/media:rw
+    restart: unless-stopped
+    labels:
+      traefik.enable: true
+      traefik.http.services.plex.loadbalancer.server.port: 32400 # port to redirect to
+      traefik.http.routers.plex.rule: Host(`plex.khamu.lan`) # url for the application
+      traefik.http.routers.plex.entrypoints: web, websecure, plex
+      traefik.http.routers.plex.tls: true
+    networks:
+      - traefik-network
+
+networks:
+  traefik-network:
+    name: traefik-network
+    external: true
+
 
 # If error create new claim code from :
 # https://www.plex.tv/claim/
+

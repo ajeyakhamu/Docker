@@ -2,19 +2,52 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
-    ports:
-      - 11434:11434
+    restart: unless-stopped
+    tty: true
+#    ports:
+#      - 11434:11434
     volumes:
-      - ./models:/models
+      - ./ollamadata:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=6h
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+              driver: nvidia
+              count: 1
+    labels:
+      traefik.enable: true
+      traefik.http.services.ollama.loadbalancer.server.port: 11434 # port to redirect to
+      traefik.http.routers.ollama.rule: Host(`ollama.khamu.lan`) # url for the application
+      traefik.http.routers.ollama.entrypoints: web, websecure, ollama
+      traefik.http.routers.ollama.tls: true
+    networks:
+      - traefik-network
 
-  openweb-ui:
+  openwebui:
     image: ghcr.io/open-webui/open-webui:main
-    container_name: openweb-ui
-    ports:
-      - 9002:3000
+    container_name: openwebui
+    restart: unless-stopped
+#    ports:
+#      - 9002:8080
     volumes:
       - ./webuidata:/app/backend/data
     depends_on:
       - ollama
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
+    labels:
+      traefik.enable: true
+      traefik.http.services.openwebui.loadbalancer.server.port: 8080 # port to redirect to
+      traefik.http.routers.openwebui.rule: Host(`ai.khamu.lan`) # url for the application
+      traefik.http.routers.openwebui.entrypoints: web, websecure
+      traefik.http.routers.openwebui.tls: true
+    networks:
+      - traefik-network
+
+networks:
+  traefik-network:
+    name: traefik-network
+    external: true

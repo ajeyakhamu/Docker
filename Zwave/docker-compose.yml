@@ -1,0 +1,40 @@
+services:
+  zwave:
+    container_name: zwave
+    image: zwavejs/zwave-js-ui:latest
+    restart: unless-stopped
+    tty: true
+    stop_signal: SIGINT
+    environment:
+      - SESSION_SECRET=xxxxxxxx
+      - ZWAVEJS_EXTERNAL_CONFIG=/usr/src/app/store/.config-db
+      # Uncomment if you want logs time and dates to match your timezone instead of UTC
+      # Available at https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+      - TZ=America/New_York
+    devices:
+      # Do not use /dev/ttyUSBX serial devices, as those mappings can change over time.
+      # Instead, use the /dev/serial/by-id/X serial device for your Z-Wave stick.
+      - '/dev/serial/by-id/usb-0658_0200-if00:/dev/zwave'
+    volumes:
+      - ./config:/usr/src/app/store
+#    ports:
+#      - '8091:8091' # port for web interface
+#      - '3000:3000' # port for Z-Wave JS websocket server
+    labels:
+      traefik.enable: true
+      traefik.tcp.services.zwave.loadbalancer.server.port: 3000 # port to redirect to
+      traefik.tcp.routers.zwave.rule: HostSNI(`*`) # url for the application
+      traefik.tcp.routers.zwave.entrypoints: zwave
+      traefik.http.services.zwave.loadbalancer.server.port: 8091 # port to redirect to
+      traefik.http.routers.zwave.rule: Host(`zwave.khamu.lan`) # url for the application
+      traefik.http.routers.zwave.entrypoints: websecure
+      traefik.http.routers.zwave.tls: true
+    networks:
+      - traefik-network
+
+networks:
+  traefik-network:
+    name: traefik-network
+    external: true
+
+

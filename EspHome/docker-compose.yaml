@@ -1,13 +1,11 @@
-#version: '3'
-
 services:
   esphome:
     image: esphome/esphome
-    container_name: espHome
+    container_name: esphome
     environment:
       ESPHOME_DASHBOARD_USE_PING: "true"
-#    ports:
-#      - 6052:6052
+      USERNAME: admin
+      PASSWORD: changeme
     volumes:
       - ./config:/config
     restart: unless-stopped
@@ -24,3 +22,6 @@ networks:
   traefik-network:
     name: traefik-network
     external: true
+
+
+

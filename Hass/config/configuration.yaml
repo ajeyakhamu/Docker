@@ -1,0 +1,50 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+recorder:
+  #  db_url: mysql://hassuser:6rn7jq6ep@db.khamu.lan/HassDb?charset=utf8
+  purge_keep_days: 15
+
+homekit:
+  - filter:
+      include_domains:
+        - cover
+        - light
+        - switch
+        - alarm_control_panel
+        - climate
+        - media_player
+      include_entity_globs:
+        - binary_sensor.*_occupancy
+
+#  - entity_config:
+#      alarm_control_panel.home_alarm:
+#        code: !secret alarmpanelcode
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    # IPV4 IPAM Subnet of nginx_default Network
+    # dockerhost01 vm ip
+    - 10.21.0.12
+    # docker container network
+    - 172.18.0.0/16
+
+telegram_bot:
+  - platform: polling
+    api_key: !secret telegram_api_key
+    allowed_chat_ids:
+      - !secret telgram_chatid_aj
+
+notify:
+  - platform: telegram
+    name: telegram_aj
+    chat_id: !secret telgram_chatid_aj
