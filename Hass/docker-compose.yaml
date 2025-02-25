@@ -2,26 +2,30 @@ services:
   hass:
     image: ghcr.io/home-assistant/home-assistant:stable
     container_name: hass
-#    privileged: true
-#    network_mode: host
+    privileged: true
+    network_mode: host
+#    ports:
+#      - 8123:8123
+#      - 21063:21063
+#      - 51827:51827
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./config:/config
-    labels:
-      traefik.enable: true
-      traefik.http.services.hass.loadbalancer.server.port: 8123 # port to redirect to
-      traefik.http.routers.hass.rule: Host(`hass.khamu.lan`) # url for the application
-      traefik.http.routers.hass.entrypoints: websecure
-      traefik.http.routers.hass.tls: true
-    networks:
-      - traefik-network
+      - /run/dbus:/run/dbus:ro
+#    labels:
+#      traefik.enable: true
+#      traefik.http.services.hass.loadbalancer.server.port: 8123 # port to redirect to
+#      traefik.http.routers.hass.rule: Host(`hass.khamu.lan`) # url for the application
+#      traefik.http.routers.hass.entrypoints: web, websecure
+#      traefik.http.routers.hass.tls: true
+#    networks:
+#      - traefik-network
 
-networks:
-  traefik-network:
-    name: traefik-network
-    external: true
+#networks:
+#  traefik-network:
+#    name: traefik-network
+#    external: true
 
 
-  
 #docker compose exec hass /bin/sh

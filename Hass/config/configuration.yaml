@@ -1,40 +1,51 @@
+homeassistant:
+  #  external_url: "https://hass.khau.lan/"
+  #  internal_url: "http://dockerhost01.khamu.lan:8123"
+  allowlist_external_dirs:
+    - "/tmp"
+
 # Loads default set of integrations. Do not remove.
 default_config:
 
 # Load frontend themes from the themes folder
 frontend:
-  themes: !include_dir_merge_named themes
+#  themes: !include_dir_merge_named themes
+#  themes:
 
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 
 recorder:
-  #  db_url: mysql://hassuser:6rn7jq6ep@db.khamu.lan/HassDb?charset=utf8
+  #  db_url: mysql://hassuser:xxxxxxxx@db.khamu.lan/HassDb?charset=utf8
   purge_keep_days: 15
 
-homekit:
-  - filter:
-      include_domains:
-        - cover
-        - light
-        - switch
-        - alarm_control_panel
-        - climate
-        - media_player
-      include_entity_globs:
-        - binary_sensor.*_occupancy
+alarm_control_panel:
+  - name: HA Alarm
+    platform: manual
+    unique_id: 6267_home_alarm
+    code: !secret alarmpanelcode
 
-#  - entity_config:
-#      alarm_control_panel.home_alarm:
-#        code: !secret alarmpanelcode
+homekit:
+  filter:
+    include_domains:
+      - cover
+      - light
+      - switch
+      - alarm_control_panel
+      - climate
+  entity_config:
+    alarm_control_panel.ha_alarm:
+      code: !secret alarmpanelcode
 
 http:
   use_x_forwarded_for: true
   trusted_proxies:
     # IPV4 IPAM Subnet of nginx_default Network
+    - ::1
+    - 127.0.0.1
     # dockerhost01 vm ip
-    - 10.21.0.12
+    - 10.21.0.3
     # docker container network
     - 172.18.0.0/16
 
