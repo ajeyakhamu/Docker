@@ -1,13 +1,11 @@
-version: '3'
 services:
   nginx:
-    image: 'jc21/nginx-proxy-manager:latest'
-    container_name: Nginx
-    restart: unless-stopped
+    image: nginx:latest
     ports:
-      - '80:80'
-      - '81:81'
-      - '443:443'
+      - "9010:80"
+      - "9011:443"
     volumes:
-      - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt
+#      - ./nginx/conf.d:/etc/nginx/conf.d
+#      - ./nginx/ssl:/etc/nginx/ssl
+      - ./html:/usr/share/nginx/html
+    restart: unless-stopped
