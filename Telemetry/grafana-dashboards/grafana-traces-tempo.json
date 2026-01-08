@@ -1,0 +1,16 @@
+{
+  "title": "FastAPI - Traces (Tempo)",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "type": "table",
+      "title": "Recent Traces",
+      "targets": [
+        {
+          "query": "{ resource.service.name=\"fastapi-service\" }",
+          "queryType": "traceql"
+        }
+      ]
+    }
+  ]
+}

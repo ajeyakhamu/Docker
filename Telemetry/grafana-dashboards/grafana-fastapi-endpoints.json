@@ -1,0 +1,13 @@
+{
+  "title": "FastAPI - Endpoint Breakdown",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "RPS by Endpoint",
+      "targets": [
+        { "expr": "sum(rate(http_server_request_duration_seconds_count[1m])) by (http_route)" }
+      ]
+    }
+  ]
+}
