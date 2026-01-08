@@ -3,24 +3,33 @@ receivers:
     protocols:
       grpc:
         endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
 
 exporters:
   prometheus:
-    endpoint: "0.0.0.0:8889" # Prometheus will scrape the collector
+    endpoint: "0.0.0.0:8889" # Internal endpoint for Prometheus to scrape
   otlphttp/loki:
     endpoint: "http://loki:3100/otlp"
   otlp/tempo:
     endpoint: "tempo:4317"
-    tls: { insecure: true }
+    tls:
+      insecure: true
+
+processors:
+  batch:
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
+      processors: [batch]
       exporters: [otlp/tempo]
     metrics:
       receivers: [otlp]
+      processors: [batch]
       exporters: [prometheus]
     logs:
       receivers: [otlp]
+      processors: [batch]
       exporters: [otlphttp/loki]
