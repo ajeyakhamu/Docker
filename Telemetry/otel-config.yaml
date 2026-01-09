@@ -6,30 +6,40 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
+processors:
+  batch:
+#  attributes:
+#    actions:
+#      - key: service.name
+#        action: insert
+#        value: "fastapi-service"
+
 exporters:
   prometheus:
-    endpoint: "0.0.0.0:8889" # Internal endpoint for Prometheus to scrape
+    endpoint: "0.0.0.0:8889"
   otlphttp/loki:
     endpoint: "http://loki:3100/otlp"
   otlp/tempo:
     endpoint: "tempo:4317"
     tls:
       insecure: true
-
-processors:
-  batch:
+  # FIX: 'logging' replaced with 'debug'
+  debug:
+#    verbosity: detailed
+    verbosity: basic
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
+#      processors: [attributes, batch]
       processors: [batch]
-      exporters: [otlp/tempo]
+      exporters: [otlp/tempo, debug]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [prometheus]
+      exporters: [prometheus, debug]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlphttp/loki]
+      exporters: [otlphttp/loki, debug]

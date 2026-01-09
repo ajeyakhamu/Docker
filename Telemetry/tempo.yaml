@@ -1,6 +1,12 @@
-stream_over_http_enabled: true
+target: all
+
 server:
   http_listen_port: 3200
+  log_level: info
+
+memberlist:
+  abort_if_cluster_join_fails: false
+  bind_port: 7946
 
 distributor:
   receivers:
@@ -12,17 +18,40 @@ distributor:
           endpoint: 0.0.0.0:4318
 
 ingester:
-  max_block_duration: 5m               # Cut blocks frequently for demo purposes
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+  max_block_duration: 5m
 
 storage:
   trace:
-    backend: local                     # Store traces on local disk
+    backend: local
     wal:
       path: /tmp/tempo/wal
     local:
       path: /tmp/tempo/blocks
 
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+  storage:
+    path: /tmp/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+        send_exemplars: true
+
+querier:
+  frontend_worker:
+    frontend_address: localhost:9095
+
 compactor:
   compaction:
     compaction_cycle: 30s
     block_retention: 48h
+
+# FIXED: Added 'local-blocks' to the processors list
+overrides:
+  metrics_generator_processors: [service-graphs, span-metrics, local-blocks]

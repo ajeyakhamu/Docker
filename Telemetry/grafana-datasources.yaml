@@ -4,18 +4,18 @@ datasources:
   - name: Prometheus
     type: prometheus
     uid: prometheus
-    access: proxy
     url: http://prometheus:9090
-    isDefault: true
+    jsonData:
+      exemplarTraceIdDestinations:
+        - datasourceUid: tempo
+          name: trace_id
 
   - name: Loki
     type: loki
     uid: loki
-    access: proxy
     url: http://loki:3100
     jsonData:
       derivedFields:
-        # This links Logs to Traces automatically in the UI
         - datasourceUid: tempo
           matcherRegex: "trace_id=(\\w+)"
           name: TraceID
@@ -24,9 +24,15 @@ datasources:
   - name: Tempo
     type: tempo
     uid: tempo
-    access: proxy
     url: http://tempo:3200
     jsonData:
+      tracesToLogs:
+        datasourceUid: loki
+        tags: ['service.name', 'service_name'] # Cover both conventions
+        mapTagNamesEnabled: true
+      tracesToMetrics:
+        datasourceUid: prometheus
+        tags: [{ key: 'service.name', value: 'service_name' }]
       nodeGraph:
         enabled: true
       lokiSearch:

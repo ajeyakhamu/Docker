@@ -1,17 +1,32 @@
-version: "3"
-
 services:
   jaeger:
-    image: jaegertracing/all-in-one
+    image: jaegertracing/all-in-one:latest
     container_name: jaeger
     environment:
       - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+      - COLLECTOR_OTLP_ENABLED=true
     ports:
       - 5775:5775/udp
       - 6831:6831/udp
       - 6832:6832/udp
       - 5778:5778
-      - 16686:16686
-      - 14268:14268
+      - 16686:16686 # Jaeger UI
+      - 14250:14250 # Jaeger Collector (gRPC)
+      - 14268:14268 # Jaeger Collector (gRPC/HTTP)
+      - 14269:14269
+      - 4317:4317 # OTLP HTTP port
+      - 4318:4318 # OTLP gRPC port
       - 9411:9411
-      - 4317:4317
+#    labels:
+#      traefik.enable: true
+#      traefik.http.services.jaeger.loadbalancer.server.port: 16686 # port to redirect to
+#      traefik.http.routers.jaeger.rule: Host(`otel.khamu.lan`) # url for the application
+#      traefik.http.routers.jaeger.entrypoints: websecure
+#      traefik.http.routers.jaeger.tls: true
+#    networks:
+#      - traefik-network
+
+#networks:
+#  traefik-network:
+#    name: traefik-network
+#    external: true

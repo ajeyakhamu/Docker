@@ -1,0 +1,61 @@
+{
+    "title": "System Observability: FastAPI",
+    "uid": "fastapi-otel",
+    "panels": [
+        {
+            "title": "Request Rate (Metrics)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total_total[1m])",
+                    "datasource": {
+                        "uid": "prometheus"
+                    }
+                }
+            ]
+        },
+        {
+            "title": "Application Logs (Loki)",
+            "type": "logs",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "{service_name=\"stockapp_fastapi\"}",
+                    "datasource": {
+                        "uid": "loki"
+                    }
+                }
+            ]
+        },
+        {
+            "title": "Recent Traces (Tempo)",
+            "type": "trace-view",
+            "gridPos": {
+                "h": 10,
+                "w": 24,
+                "x": 0,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "tempo"
+                    },
+                    "queryType": "search"
+                }
+            ]
+        }
+    ],
+    "refresh": "5s"
+}
