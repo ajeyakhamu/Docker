@@ -1,0 +1,23 @@
+{
+  "uid": "otel-metrics",
+  "title": "OpenTelemetry - Metrics",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HTTP Requests Total",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "http_requests_total",
+          "legendFormat": "{{service_name}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 }
+    }
+  ]
+}

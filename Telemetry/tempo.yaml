@@ -50,7 +50,9 @@ querier:
 compactor:
   compaction:
     compaction_cycle: 30s
-    block_retention: 48h
+    # How long to keep traces (e.g., 7 days)
+    block_retention: 168h
+    compacted_block_retention: 1h
 
 # FIXED: Added 'local-blocks' to the processors list
 overrides:

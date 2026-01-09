@@ -1,0 +1,23 @@
+{
+  "uid": "otel-traces",
+  "title": "OpenTelemetry - Traces",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "traces",
+      "title": "Distributed Traces",
+      "datasource": "Tempo",
+      "targets": [
+        {
+          "queryType": "traceql",
+          "query": "{ service.name = \"stockapp_fastapi\" }",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 12 }
+    }
+  ]
+}

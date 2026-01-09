@@ -1,0 +1,28 @@
+{
+  "uid": "otel-logs",
+  "title": "OpenTelemetry - Logs",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "logs",
+      "title": "Application Logs",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{service_name=\"stockapp_fastapi\"}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true
+      },
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 12 }
+    }
+  ]
+}
