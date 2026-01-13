@@ -1,0 +1,41 @@
+services:
+  lgtm:
+    image: docker.io/grafana/otel-lgtm:latest
+    container_name: lgtm
+    restart: unless-stopped
+    environment:
+#      - ENABLE_LOGS_ALL=true # For lgtm logs
+      - GF_PATHS_DATA=/data/grafana
+      - GF_AUTH_ANONYMOUS_ENABLED=False
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - otel_data:/var/lib/grafana
+#      - ./grafana:/data/grafana
+#      - ./prometheus:/data/prometheus
+#      - ./loki:/data/loki
+    ports:
+      - 4318:4318 # OTLP/HTTP
+      - 4317:4317 # OTLP/gRPC
+#      - 3000:3000 # Grafana
+#      - 9090:9090 # Prometheus
+#      - 3100:3100 # Loki
+#      - 3200:3200 # tempo
+#      - 3500:3500 # Pyroscope
+#      - 4040:4040 # Pyroscope UI
+#      - 9411:9411 # Zipkin
+    labels:
+      traefik.enable: true
+      traefik.http.services.lgtm-ui.loadbalancer.server.port: 3000 # port to redirect to
+      traefik.http.routers.lgtm-ui.rule: Host(`otel.khamu.lan`) # url for the application
+      traefik.http.routers.lgtm-ui.entrypoints: websecure
+      traefik.http.routers.lgtm-ui.tls: true
+    networks:
+      - traefik-network
+
+networks:
+  traefik-network:
+    name: traefik-network
+    external: true
+
+volumes:
+  otel_data:
